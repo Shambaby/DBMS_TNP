@@ -1,0 +1,71 @@
+:root {
+  --tnp-blue: #1a56db;
+  --tnp-blue-dark: #1e40af;
+  --tnp-bg: #f0f4f8;
+}
+
+body {
+  background: var(--tnp-bg);
+  font-family: 'Segoe UI', sans-serif;
+}
+
+.tnp-navbar {
+  background: linear-gradient(135deg, #1a56db 0%, #1e40af 100%);
+  box-shadow: 0 2px 8px rgba(26,86,219,0.2);
+  padding: 0.6rem 0;
+}
+
+.tnp-navbar .navbar-brand { color: #fff; }
+.tnp-navbar .nav-logo {
+  width: 32px; height: 32px; background: rgba(255,255,255,0.2);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  font-size: 17px; color: #fff;
+}
+.tnp-navbar .nav-link { color: rgba(255,255,255,0.75); border-radius: 8px; padding: 0.4rem 0.75rem; font-size: 0.875rem; transition: all 0.15s; }
+.tnp-navbar .nav-link:hover, .tnp-navbar .nav-link.active { color: #fff; background: rgba(255,255,255,0.15); }
+
+.page-header { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 1.25rem 0; }
+.page-header h4 { margin: 0; font-weight: 600; color: #1e293b; }
+.page-header .text-muted { font-size: 0.85rem; }
+
+.stat-card {
+  background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+  padding: 1.25rem; transition: transform 0.15s, box-shadow 0.15s;
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.07); }
+.stat-card .stat-icon {
+  width: 48px; height: 48px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center; font-size: 22px;
+}
+.stat-card .stat-value { font-size: 1.75rem; font-weight: 700; line-height: 1.2; color: #1e293b; }
+.stat-card .stat-label { font-size: 0.8rem; color: #64748b; margin-top: 2px; }
+
+.data-table-card {
+  background: #fff; border-radius: 14px; border: 1px solid #e2e8f0; overflow: hidden;
+}
+.data-table-card .table-header {
+  padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9;
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;
+}
+.data-table-card .table { margin: 0; }
+.data-table-card .table thead th {
+  background: #f8fafc; color: #64748b; font-size: 0.78rem;
+  font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0; padding: 0.75rem 1rem;
+}
+.data-table-card .table tbody td { padding: 0.85rem 1rem; vertical-align: middle; font-size: 0.875rem; color: #374151; }
+.data-table-card .table tbody tr:hover { background: #f8fafc; }
+
+.btn-primary { background: var(--tnp-blue); border-color: var(--(--tnp-blue)); }
+.btn-primary:hover { background: var(--tnp-blue-dark); border-color: var(--tnp-blue-dark); }
+.btn-primary { background: #1a56db; border-color: #1a56db; }
+.btn-primary:hover { background: #1e40af; border-color: #1e40af; }
+
+.form-control:focus, .form-select:focus { border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.1); }
+
+.badge-dept { background: #e0e7ff; color: #3730a3; font-weight: 500; border-radius: 6px; padding: 3px 10px; font-size: 0.75rem; }
+.badge-cgpa { background: #dcfce7; color: #166534; font-weight: 500; border-radius: 6px; padding: 3px 10px; font-size: 0.75rem; }
+.badge-ctc { background: #fef3c7; color: #92400e; font-weight: 500; border-radius: 6px; padding: 3px 10px; font-size: 0.75rem; }
+
+.empty-state { padding: 3rem 1rem; text-align: center; color: #94a3b8; }
+.empty-state i { font-size: 2.5rem; display: block; margin-bottom: 0.75rem; }

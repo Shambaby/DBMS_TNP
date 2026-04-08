@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TNP Portal — Companies</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+
+  <div class="page-header">
+    <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+      <div><h4>Companies</h4><span class="text-muted">Manage partner companies</span></div>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#companyModal" onclick="openAddModal()">
+        <i class="bi bi-plus-lg me-1"></i> Add Company
+      </button>
+    </div>
+  </div>
+
+  <div class="container-fluid px-4 py-4">
+    <div class="data-table-card">
+      <div class="table-header">
+        <h6 class="mb-0 fw-semibold" id="table-count">All Companies</h6>
+        <input type="search" class="form-control form-control-sm w-auto" placeholder="Search..." id="search-input" oninput="filterTable(this.value)" />
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead>
+            <tr>
+              <th>#</th><th>Company Name</th><th>Address</th><th>Contact</th><th>Added On</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="companies-body">
+            <tr><td colspan="6" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="companyModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-semibold" id="modal-title">Add Company</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-2">
+          <input type="hidden" id="company-id" />
+          <div class="mb-3">
+            <label class="form-label small fw-medium">Company Name <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" id="company-name" />
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-medium">Address</label>
+            <textarea class="form-control" id="company-address" rows="2"></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-medium">Contact No.</label>
+            <input type="text" class="form-control" id="company-contact" />
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" onclick="saveCompany()">Save Company</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    renderNav("companies");
+    let allCompanies = [];
+
+    async function loadCompanies() {
+      try {
+        allCompanies = await api.get("/companies");
+        renderTable(allCompanies);
+        document.getElementById("table-count").textContent = `All Companies (${allCompanies.length})`;
+      } catch (err) {
+        document.getElementById("companies-body").innerHTML = `<tr><td colspan="6" class="empty-state"><i class="bi bi-exclamation-circle"></i>Failed to load</td></tr>`;
+      }
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById("companies-body");
+      tbody.innerHTML = data.length ? data.map((c, i) => `
+        <tr>
+          <td>${i + 1}</td>
+          <td><strong>${c.company_name}</strong></td>
+          <td>${c.address || "—"}</td>
+          <td>${c.contact_no || "—"}</td>
+          <td>${formatDate(c.created_at)}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${c.company_id})"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteCompany(${c.company_id}, '${c.company_name}')"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>`).join("") : `<tr><td colspan="6" class="empty-state"><i class="bi bi-building"></i>No companies found</td></tr>`;
+    }
+
+    function filterTable(q) {
+      const filtered = allCompanies.filter(c =>
+        c.company_name.toLowerCase().includes(q.toLowerCase()) ||
+        (c.address || "").toLowerCase().includes(q.toLowerCase())
+      );
+      renderTable(filtered);
+    }
+
+    function openAddModal() {
+      document.getElementById("modal-title").textContent = "Add Company";
+      document.getElementById("company-id").value = "";
+      document.getElementById("company-name").value = "";
+      document.getElementById("company-address").value = "";
+      document.getElementById("company-contact").value = "";
+    }
+
+    async function openEditModal(id) {
+      const c = allCompanies.find(x => x.company_id === id);
+      document.getElementById("modal-title").textContent = "Edit Company";
+      document.getElementById("company-id").value = c.company_id;
+      document.getElementById("company-name").value = c.company_name;
+      document.getElementById("company-address").value = c.address || "";
+      document.getElementById("company-contact").value = c.contact_no || "";
+      new bootstrap.Modal(document.getElementById("companyModal")).show();
+    }
+
+    async function saveCompany() {
+      const id = document.getElementById("company-id").value;
+      const payload = {
+        company_name: document.getElementById("company-name").value.trim(),
+        address: document.getElementById("company-address").value.trim(),
+        contact_no: document.getElementById("company-contact").value.trim(),
+      };
+      if (!payload.company_name) { showToast("Company name is required", "error"); return; }
+      try {
+        if (id) {
+          await api.put(`/companies/${id}`, payload);
+          showToast("Company updated");
+        } else {
+          await api.post("/companies", payload);
+          showToast("Company added");
+        }
+        bootstrap.Modal.getInstance(document.getElementById("companyModal")).hide();
+        loadCompanies();
+      } catch (err) {
+        showToast(err.error || "Failed to save", "error");
+      }
+    }
+
+    async function deleteCompany(id, name) {
+      if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+      try {
+        await api.delete(`/companies/${id}`);
+        showToast("Company deleted");
+        loadCompanies();
+      } catch (err) {
+        showToast(err.error || "Failed to delete", "error");
+      }
+    }
+
+    loadCompanies();
+  </script>
+</body>
+</html>

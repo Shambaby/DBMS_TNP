@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TNP Portal — Students</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+  <div class="page-header">
+    <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+      <div><h4>Students</h4><span class="text-muted">Manage student records</span></div>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#studentModal" onclick="openAddModal()">
+        <i class="bi bi-plus-lg me-1"></i> Add Student
+      </button>
+    </div>
+  </div>
+  <div class="container-fluid px-4 py-4">
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <select class="form-select form-select-sm" id="dept-filter" onchange="applyFilters()">
+          <option value="">All Departments</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <input type="search" class="form-control form-control-sm" placeholder="Search by email..." id="search-input" oninput="applyFilters()" />
+      </div>
+    </div>
+    <div class="data-table-card">
+      <div class="table-header">
+        <h6 class="mb-0 fw-semibold" id="table-count">All Students</h6>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead><tr><th>#</th><th>Email</th><th>Department</th><th>CGPA</th><th>Backlogs</th><th>Added On</th><th>Actions</th></tr></thead>
+          <tbody id="students-body"><tr><td colspan="7" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="studentModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-semibold" id="modal-title">Add Student</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-2">
+          <input type="hidden" id="student-id" />
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label small fw-medium">Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" id="student-email" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Department <span class="text-danger">*</span></label>
+              <select class="form-select" id="student-dept">
+                <option value="">Select...</option>
+                <option>CSE</option><option>IT</option><option>ECE</option><option>EEE</option>
+                <option>ME</option><option>CE</option><option>AIDS</option><option>AIML</option>
+              </select>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-medium">CGPA</label>
+              <input type="number" class="form-control" id="student-cgpa" min="0" max="10" step="0.01" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label small fw-medium">Backlogs</label>
+              <input type="number" class="form-control" id="student-backlog" min="0" value="0" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" onclick="saveStudent()">Save Student</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script><script src="js/nav.js"></script>
+  <script>
+    renderNav("students");
+    let allStudents = [];
+    async function loadStudents() {
+      try {
+        allStudents = await api.get("/students");
+        const depts = [...new Set(allStudents.map(s => s.dept).filter(Boolean))];
+        const df = document.getElementById("dept-filter");
+        depts.forEach(d => { const o = document.createElement("option"); o.value = d; o.textContent = d; df.appendChild(o); });
+        renderTable(allStudents);
+        document.getElementById("table-count").textContent = `All Students (${allStudents.length})`;
+      } catch(err) {
+        document.getElementById("students-body").innerHTML = `<tr><td colspan="7" class="empty-state"><i class="bi bi-exclamation-circle"></i>Failed to load</td></tr>`;
+      }
+    }
+    function renderTable(data) {
+      const tbody = document.getElementById("students-body");
+      tbody.innerHTML = data.length ? data.map((s,i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>${s.email}</td>
+          <td><span class="badge-dept">${s.dept}</span></td>
+          <td><span class="badge-cgpa">${s.cgpa || "—"}</span></td>
+          <td>${s.academic_backlog > 0 ? `<span class="badge bg-danger-subtle text-danger">${s.academic_backlog}</span>` : `<span class="badge bg-success-subtle text-success">0</span>`}</td>
+          <td>${formatDate(s.created_at)}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${s.student_id})"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent(${s.student_id})"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>`).join("") : `<tr><td colspan="7" class="empty-state"><i class="bi bi-people"></i>No students found</td></tr>`;
+    }
+    function applyFilters() {
+      const dept = document.getElementById("dept-filter").value;
+      const q = document.getElementById("search-input").value.toLowerCase();
+      renderTable(allStudents.filter(s =>
+        (!dept || s.dept === dept) && (!q || s.email.toLowerCase().includes(q))
+      ));
+    }
+    function openAddModal() {
+      document.getElementById("modal-title").textContent = "Add Student";
+      document.getElementById("student-id").value = "";
+      document.getElementById("student-email").value = "";
+      document.getElementById("student-dept").value = "";
+      document.getElementById("student-cgpa").value = "";
+      document.getElementById("student-backlog").value = "0";
+    }
+    function openEditModal(id) {
+      const s = allStudents.find(x => x.student_id === id);
+      document.getElementById("modal-title").textContent = "Edit Student";
+      document.getElementById("student-id").value = s.student_id;
+      document.getElementById("student-email").value = s.email;
+      document.getElementById("student-dept").value = s.dept;
+      document.getElementById("student-cgpa").value = s.cgpa || "";
+      document.getElementById("student-backlog").value = s.academic_backlog || 0;
+      new bootstrap.Modal(document.getElementById("studentModal")).show();
+    }
+    async function saveStudent() {
+      const id = document.getElementById("student-id").value;
+      const payload = {
+        email: document.getElementById("student-email").value.trim(),
+        dept: document.getElementById("student-dept").value,
+        cgpa: document.getElementById("student-cgpa").value || null,
+        academic_backlog: document.getElementById("student-backlog").value || 0,
+      };
+      if (!payload.email || !payload.dept) { showToast("Email and department required","error"); return; }
+      try {
+        id ? await api.put(`/students/${id}`, payload) : await api.post("/students", payload);
+        showToast(id ? "Student updated" : "Student added");
+        bootstrap.Modal.getInstance(document.getElementById("studentModal")).hide();
+        loadStudents();
+      } catch(err) { showToast(err.error||"Failed to save","error"); }
+    }
+    async function deleteStudent(id) {
+      if (!confirm("Delete this student?")) return;
+      try { await api.delete(`/students/${id}`); showToast("Student deleted"); loadStudents(); }
+      catch(err) { showToast(err.error||"Failed to delete","error"); }
+    }
+    loadStudents();
+  </script>
+</body>
+</html>

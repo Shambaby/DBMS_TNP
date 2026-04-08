@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TNP Portal — Placements</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+  <div class="page-header">
+    <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+      <div><h4>Placements</h4><span class="text-muted">Record final placement outcomes</span></div>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#placementModal" onclick="openAddModal()">
+        <i class="bi bi-plus-lg me-1"></i> Record Placement
+      </button>
+    </div>
+  </div>
+  <div class="container-fluid px-4 py-4">
+    <div class="data-table-card">
+      <div class="table-header">
+        <h6 class="mb-0 fw-semibold" id="table-count">All Placements</h6>
+        <input type="search" class="form-control form-control-sm w-auto" placeholder="Search..." oninput="filterTable(this.value)" />
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead><tr><th>#</th><th>Student</th><th>Dept</th><th>Company</th><th>Job Role</th><th>CTC</th><th>Joining Date</th><th>Recorded On</th><th>Actions</th></tr></thead>
+          <tbody id="placements-body"><tr><td colspan="9" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="placementModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-semibold" id="modal-title">Record Placement</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-2">
+          <input type="hidden" id="placement-id" />
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Application <span class="text-danger">*</span></label>
+              <select class="form-select" id="pl-application"></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Job Opening <span class="text-danger">*</span></label>
+              <select class="form-select" id="pl-job"></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">CTC (₹ per annum)</label>
+              <input type="number" class="form-control" id="pl-ctc" min="0" placeholder="e.g. 600000" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Joining Date</label>
+              <input type="date" class="form-control" id="pl-joindate" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" onclick="savePlacement()">Save Placement</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script><script src="js/nav.js"></script>
+  <script>
+    renderNav("placements");
+    let allPlacements = [], applications = [], jobs = [];
+    async function loadPlacements() {
+      try {
+        [allPlacements, applications, jobs] = await Promise.all([api.get("/placements"), api.get("/applications"), api.get("/jobs")]);
+        renderTable(allPlacements);
+        document.getElementById("table-count").textContent = `All Placements (${allPlacements.length})`;
+      } catch(err) {
+        document.getElementById("placements-body").innerHTML = `<tr><td colspan="9" class="empty-state"><i class="bi bi-exclamation-circle"></i>Failed to load</td></tr>`;
+      }
+    }
+    function renderTable(data) {
+      const tbody = document.getElementById("placements-body");
+      tbody.innerHTML = data.length ? data.map((p,i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>${p.student_email||"—"}</td>
+          <td><span class="badge-dept">${p.dept||"—"}</span></td>
+          <td><strong>${p.company_name||"—"}</strong></td>
+          <td style="max-width:160px;"><span class="text-truncate d-block" style="max-width:140px;">${p.job_description||"—"}</span></td>
+          <td><span class="badge-ctc">${formatCTC(p.ctc)}</span></td>
+          <td>${formatDate(p.join_date)}</td>
+          <td>${formatDate(p.created_at)}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${p.placement_id})"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deletePlacement(${p.placement_id})"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>`).join("") : `<tr><td colspan="9" class="empty-state"><i class="bi bi-trophy"></i>No placements recorded yet</td></tr>`;
+    }
+    function filterTable(q) {
+      renderTable(allPlacements.filter(p =>
+        (p.student_email||"").toLowerCase().includes(q.toLowerCase()) ||
+        (p.company_name||"").toLowerCase().includes(q.toLowerCase())
+      ));
+    }
+    function populateSelects() {
+      document.getElementById("pl-application").innerHTML = `<option value="">Select application...</option>` + applications.map(a => `<option value="${a.application_id}">${a.student_email} → ${a.company_name}</option>`).join("");
+      document.getElementById("pl-job").innerHTML = `<option value="">Select job...</option>` + jobs.map(j => `<option value="${j.job_id}">${j.company_name} — ${j.job_description.substring(0,40)}</option>`).join("");
+    }
+    function openAddModal() {
+      document.getElementById("modal-title").textContent = "Record Placement";
+      document.getElementById("placement-id").value = "";
+      document.getElementById("pl-ctc").value = "";
+      document.getElementById("pl-joindate").value = "";
+      populateSelects();
+    }
+    function openEditModal(id) {
+      const p = allPlacements.find(x => x.placement_id === id);
+      document.getElementById("modal-title").textContent = "Edit Placement";
+      document.getElementById("placement-id").value = p.placement_id;
+      document.getElementById("pl-ctc").value = p.ctc || "";
+      document.getElementById("pl-joindate").value = p.join_date ? p.join_date.split("T")[0] : "";
+      populateSelects();
+      document.getElementById("pl-application").value = p.application_id;
+      document.getElementById("pl-job").value = p.job_id;
+      new bootstrap.Modal(document.getElementById("placementModal")).show();
+    }
+    async function savePlacement() {
+      const id = document.getElementById("placement-id").value;
+      const payload = {
+        application_id: document.getElementById("pl-application").value,
+        job_id: document.getElementById("pl-job").value,
+        ctc: document.getElementById("pl-ctc").value || null,
+        join_date: document.getElementById("pl-joindate").value || null,
+      };
+      if (!payload.application_id || !payload.job_id) { showToast("Application and job required","error"); return; }
+      try {
+        id ? await api.put(`/placements/${id}`, payload) : await api.post("/placements", payload);
+        showToast(id ? "Placement updated" : "Placement recorded");
+        bootstrap.Modal.getInstance(document.getElementById("placementModal")).hide();
+        loadPlacements();
+      } catch(err) { showToast(err.error||"Failed to save","error"); }
+    }
+    async function deletePlacement(id) {
+      if (!confirm("Delete this placement record?")) return;
+      try { await api.delete(`/placements/${id}`); showToast("Placement deleted"); loadPlacements(); }
+      catch(err) { showToast(err.error||"Failed to delete","error"); }
+    }
+    loadPlacements();
+  </script>
+</body>
+</html>

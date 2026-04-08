@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TNP Portal — Job Openings</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+  <div class="page-header">
+    <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+      <div><h4>Job Openings</h4><span class="text-muted">Manage all job listings</span></div>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#jobModal" onclick="openAddModal()">
+        <i class="bi bi-plus-lg me-1"></i> Add Job
+      </button>
+    </div>
+  </div>
+  <div class="container-fluid px-4 py-4">
+    <div class="data-table-card">
+      <div class="table-header">
+        <h6 class="mb-0 fw-semibold" id="table-count">All Job Openings</h6>
+        <input type="search" class="form-control form-control-sm w-auto" placeholder="Search..." oninput="filterTable(this.value)" />
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead><tr><th>#</th><th>Company</th><th>Description</th><th>Deadline</th><th>Posted By</th><th>Added On</th><th>Actions</th></tr></thead>
+          <tbody id="jobs-body"><tr><td colspan="7" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="jobModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-semibold" id="modal-title">Add Job Opening</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-2">
+          <input type="hidden" id="job-id" />
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Company <span class="text-danger">*</span></label>
+              <select class="form-select" id="job-company"></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Admin</label>
+              <select class="form-select" id="job-admin"></select>
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-medium">Job Description <span class="text-danger">*</span></label>
+              <textarea class="form-control" id="job-desc" rows="3" placeholder="Role, requirements, package details..."></textarea>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Application Deadline</label>
+              <input type="date" class="form-control" id="job-deadline" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" onclick="saveJob()">Save Job</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/nav.js"></script>
+  <script>
+    renderNav("jobs");
+    let allJobs = [], companies = [], admins = [];
+    async function loadJobs() {
+      try {
+        [allJobs, companies, admins] = await Promise.all([api.get("/jobs"), api.get("/companies"), api.get("/admin")]);
+        renderTable(allJobs);
+        document.getElementById("table-count").textContent = `All Job Openings (${allJobs.length})`;
+      } catch (err) {
+        document.getElementById("jobs-body").innerHTML = `<tr><td colspan="7" class="empty-state"><i class="bi bi-exclamation-circle"></i>Failed to load</td></tr>`;
+      }
+    }
+    function renderTable(data) {
+      const tbody = document.getElementById("jobs-body");
+      tbody.innerHTML = data.length ? data.map((j, i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td><strong>${j.company_name||"—"}</strong></td>
+          <td style="max-width:240px;"><span class="text-truncate d-block" style="max-width:220px;" title="${j.job_description}">${j.job_description}</span></td>
+          <td>${j.appl_deadline ? `<span class="badge ${new Date(j.appl_deadline)<new Date()?'bg-danger-subtle text-danger':'bg-success-subtle text-success'}">${formatDate(j.appl_deadline)}</span>` : "—"}</td>
+          <td>${j.admin_email||"—"}</td>
+          <td>${formatDate(j.created_at)}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${j.job_id})"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteJob(${j.job_id})"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>`).join("") : `<tr><td colspan="7" class="empty-state"><i class="bi bi-briefcase"></i>No job openings found</td></tr>`;
+    }
+    function filterTable(q) {
+      renderTable(allJobs.filter(j => j.job_description.toLowerCase().includes(q.toLowerCase()) || (j.company_name||"").toLowerCase().includes(q.toLowerCase())));
+    }
+    function populateSelects() {
+      document.getElementById("job-company").innerHTML = `<option value="">Select company...</option>` + companies.map(c => `<option value="${c.company_id}">${c.company_name}</option>`).join("");
+      document.getElementById("job-admin").innerHTML = `<option value="">Select admin...</option>` + admins.map(a => `<option value="${a.admin_id}">${a.email}</option>`).join("");
+    }
+    function openAddModal() {
+      document.getElementById("modal-title").textContent = "Add Job Opening";
+      document.getElementById("job-id").value = "";
+      document.getElementById("job-desc").value = "";
+      document.getElementById("job-deadline").value = "";
+      populateSelects();
+    }
+    function openEditModal(id) {
+      const j = allJobs.find(x => x.job_id === id);
+      document.getElementById("modal-title").textContent = "Edit Job Opening";
+      document.getElementById("job-id").value = j.job_id;
+      document.getElementById("job-desc").value = j.job_description;
+      document.getElementById("job-deadline").value = j.appl_deadline ? j.appl_deadline.split("T")[0] : "";
+      populateSelects();
+      document.getElementById("job-company").value = j.company_id;
+      document.getElementById("job-admin").value = j.admin_id || "";
+      new bootstrap.Modal(document.getElementById("jobModal")).show();
+    }
+    async function saveJob() {
+      const id = document.getElementById("job-id").value;
+      const payload = {
+        company_id: document.getElementById("job-company").value,
+        admin_id: document.getElementById("job-admin").value || null,
+        job_description: document.getElementById("job-desc").value.trim(),
+        appl_deadline: document.getElementById("job-deadline").value || null,
+      };
+      if (!payload.company_id || !payload.job_description) { showToast("Company and description required","error"); return; }
+      try {
+        id ? await api.put(`/jobs/${id}`, payload) : await api.post("/jobs", payload);
+        showToast(id ? "Job updated" : "Job added");
+        bootstrap.Modal.getInstance(document.getElementById("jobModal")).hide();
+        loadJobs();
+      } catch(err) { showToast(err.error||"Failed to save","error"); }
+    }
+    async function deleteJob(id) {
+      if (!confirm("Delete this job opening?")) return;
+      try { await api.delete(`/jobs/${id}`); showToast("Job deleted"); loadJobs(); }
+      catch(err) { showToast(err.error||"Failed to delete","error"); }
+    }
+    loadJobs();
+  </script>
+</body>
+</html>

@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TNP Portal — Applications</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+  <div class="page-header">
+    <div class="container-fluid px-4 d-flex align-items-center justify-content-between">
+      <div><h4>Student Applications</h4><span class="text-muted">Track all job applications</span></div>
+      <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#appModal" onclick="openAddModal()">
+        <i class="bi bi-plus-lg me-1"></i> New Application
+      </button>
+    </div>
+  </div>
+  <div class="container-fluid px-4 py-4">
+    <div class="data-table-card">
+      <div class="table-header">
+        <h6 class="mb-0 fw-semibold" id="table-count">All Applications</h6>
+        <input type="search" class="form-control form-control-sm w-auto" placeholder="Search student/company..." oninput="filterTable(this.value)" />
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead><tr><th>#</th><th>Student</th><th>Dept</th><th>CGPA</th><th>Company</th><th>Job Role</th><th>Backlogs</th><th>Applied On</th><th>Actions</th></tr></thead>
+          <tbody id="apps-body"><tr><td colspan="9" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="modal fade" id="appModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content rounded-4">
+        <div class="modal-header border-0 pb-0">
+          <h5 class="modal-title fw-semibold" id="modal-title">New Application</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body pt-2">
+          <input type="hidden" id="app-id" />
+          <div class="row g-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Student <span class="text-danger">*</span></label>
+              <select class="form-select" id="app-student"></select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Job Opening <span class="text-danger">*</span></label>
+              <select class="form-select" id="app-job"></select>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-medium">Academic Backlogs</label>
+              <input type="number" class="form-control" id="app-backlog" min="0" value="0" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-medium">Date of Application</label>
+              <input type="date" class="form-control" id="app-date" />
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer border-0 pt-0">
+          <button class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" onclick="saveApp()">Save Application</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="js/api.js"></script><script src="js/nav.js"></script>
+  <script>
+    renderNav("applications");
+    let allApps = [], students = [], jobs = [];
+    async function loadApps() {
+      try {
+        [allApps, students, jobs] = await Promise.all([api.get("/applications"), api.get("/students"), api.get("/jobs")]);
+        renderTable(allApps);
+        document.getElementById("table-count").textContent = `All Applications (${allApps.length})`;
+      } catch(err) {
+        document.getElementById("apps-body").innerHTML = `<tr><td colspan="9" class="empty-state"><i class="bi bi-exclamation-circle"></i>Failed to load</td></tr>`;
+      }
+    }
+    function renderTable(data) {
+      const tbody = document.getElementById("apps-body");
+      tbody.innerHTML = data.length ? data.map((a,i) => `
+        <tr>
+          <td>${i+1}</td>
+          <td>${a.student_email||"—"}</td>
+          <td><span class="badge-dept">${a.dept||"—"}</span></td>
+          <td><span class="badge-cgpa">${a.cgpa||"—"}</span></td>
+          <td>${a.company_name||"—"}</td>
+          <td style="max-width:180px;"><span class="text-truncate d-block" style="max-width:160px;" title="${a.job_description||''}">${a.job_description||"—"}</span></td>
+          <td>${a.academic_backlog > 0 ? `<span class="badge bg-danger-subtle text-danger">${a.academic_backlog}</span>` : `<span class="badge bg-success-subtle text-success">0</span>`}</td>
+          <td>${formatDate(a.date_of_application)}</td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${a.application_id})"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteApp(${a.application_id})"><i class="bi bi-trash"></i></button>
+          </td>
+        </tr>`).join("") : `<tr><td colspan="9" class="empty-state"><i class="bi bi-file-earmark-text"></i>No applications found</td></tr>`;
+    }
+    function filterTable(q) {
+      renderTable(allApps.filter(a =>
+        (a.student_email||"").toLowerCase().includes(q.toLowerCase()) ||
+        (a.company_name||"").toLowerCase().includes(q.toLowerCase())
+      ));
+    }
+    function populateSelects() {
+      document.getElementById("app-student").innerHTML = `<option value="">Select student...</option>` + students.map(s => `<option value="${s.student_id}">${s.email} (${s.dept})</option>`).join("");
+      document.getElementById("app-job").innerHTML = `<option value="">Select job...</option>` + jobs.map(j => `<option value="${j.job_id}">${j.company_name} — ${j.job_description.substring(0,40)}...</option>`).join("");
+    }
+    function openAddModal() {
+      document.getElementById("modal-title").textContent = "New Application";
+      document.getElementById("app-id").value = "";
+      document.getElementById("app-backlog").value = "0";
+      document.getElementById("app-date").value = new Date().toISOString().split("T")[0];
+      populateSelects();
+    }
+    function openEditModal(id) {
+      const a = allApps.find(x => x.application_id === id);
+      document.getElementById("modal-title").textContent = "Edit Application";
+      document.getElementById("app-id").value = a.application_id;
+      document.getElementById("app-backlog").value = a.academic_backlog || 0;
+      document.getElementById("app-date").value = a.date_of_application ? a.date_of_application.split("T")[0] : "";
+      populateSelects();
+      document.getElementById("app-student").value = a.student_id;
+      document.getElementById("app-job").value = a.job_id;
+      new bootstrap.Modal(document.getElementById("appModal")).show();
+    }
+    async function saveApp() {
+      const id = document.getElementById("app-id").value;
+      const payload = {
+        student_id: document.getElementById("app-student").value,
+        job_id: document.getElementById("app-job").value,
+        academic_backlog: document.getElementById("app-backlog").value || 0,
+        date_of_application: document.getElementById("app-date").value || null,
+      };
+      if (!payload.student_id || !payload.job_id) { showToast("Student and job required","error"); return; }
+      try {
+        id ? await api.put(`/applications/${id}`, payload) : await api.post("/applications", payload);
+        showToast(id ? "Application updated" : "Application submitted");
+        bootstrap.Modal.getInstance(document.getElementById("appModal")).hide();
+        loadApps();
+      } catch(err) { showToast(err.error||"Failed to save","error"); }
+    }
+    async function deleteApp(id) {
+      if (!confirm("Delete this application?")) return;
+      try { await api.delete(`/applications/${id}`); showToast("Application deleted"); loadApps(); }
+      catch(err) { showToast(err.error||"Failed to delete","error"); }
+    }
+    loadApps();
+  </script>
+</body>
+</html>
