@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,6 +9,7 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
+
 <body>
   <div id="nav-placeholder"></div>
 
@@ -51,7 +53,8 @@
       </div>
       <div class="col-6 col-md-4 col-lg-2">
         <div class="stat-card">
-          <div class="stat-icon bg-secondary bg-opacity-10 text-secondary mb-2"><i class="bi bi-file-earmark-text-fill"></i></div>
+          <div class="stat-icon bg-secondary bg-opacity-10 text-secondary mb-2"><i
+              class="bi bi-file-earmark-text-fill"></i></div>
           <div class="stat-value" id="s-apps">—</div>
           <div class="stat-label">Applications</div>
         </div>
@@ -92,7 +95,9 @@
                 </tr>
               </thead>
               <tbody id="recent-placements">
-                <tr><td colspan="5" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td></tr>
+                <tr>
+                  <td colspan="5" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -108,10 +113,16 @@
           <div class="table-responsive">
             <table class="table">
               <thead>
-                <tr><th>Department</th><th>Placed</th><th>% Share</th></tr>
+                <tr>
+                  <th>Department</th>
+                  <th>Placed</th>
+                  <th>% Share</th>
+                </tr>
               </thead>
               <tbody id="dept-stats">
-                <tr><td colspan="3" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td></tr>
+                <tr>
+                  <td colspan="3" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td>
+                </tr>
               </tbody>
             </table>
           </div>
@@ -155,9 +166,9 @@
             <td>
               <div class="d-flex align-items-center gap-2">
                 <div class="progress flex-grow-1" style="height:6px;">
-                  <div class="progress-bar bg-primary" style="width:${Math.round(r.placed/total*100)}%"></div>
+                  <div class="progress-bar bg-primary" style="width:${Math.round(r.placed / total * 100)}%"></div>
                 </div>
-                <small>${Math.round(r.placed/total*100)}%</small>
+                <small>${Math.round(r.placed / total * 100)}%</small>
               </div>
             </td>
           </tr>`).join("") : `<tr><td colspan="3" class="empty-state"><i class="bi bi-inbox"></i>No data</td></tr>`;
@@ -168,4 +179,5 @@
     loadDashboard();
   </script>
 </body>
+
 </html>

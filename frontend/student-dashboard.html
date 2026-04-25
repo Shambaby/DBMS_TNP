@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Dashboard — TNP Portal</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+  <link rel="stylesheet" href="css/student.css" />
+</head>
+<body>
+
+  <!-- ── SIDEBAR ── -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon"><i class="bi bi-mortarboard-fill"></i></div>
+      <div>
+        <div class="logo-title">TNP Portal</div>
+        <div class="logo-sub">Student</div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a href="#" class="nav-item active" data-section="home" onclick="showSection('home',this);return false;">
+        <i class="bi bi-grid-1x2-fill"></i><span>Dashboard</span>
+      </a>
+      <a href="#" class="nav-item" data-section="jobs" onclick="showSection('jobs',this);return false;">
+        <i class="bi bi-briefcase-fill"></i><span>Job Openings</span>
+        <span class="nav-badge" id="new-jobs-badge" style="display:none">0</span>
+      </a>
+      <a href="#" class="nav-item" data-section="applications" onclick="showSection('applications',this);return false;">
+        <i class="bi bi-file-earmark-text-fill"></i><span>My Applications</span>
+      </a>
+      <a href="#" class="nav-item" data-section="profile" onclick="showSection('profile',this);return false;">
+        <i class="bi bi-person-fill"></i><span>My Profile</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="student-info">
+        <div class="student-avatar" id="sidebar-avatar">S</div>
+        <div>
+          <div class="student-name" id="sidebar-name">Student</div>
+          <div class="student-dept" id="sidebar-dept">—</div>
+        </div>
+      </div>
+      <button class="logout-btn" onclick="doStudentLogout()">
+        <i class="bi bi-box-arrow-right"></i> Logout
+      </button>
+    </div>
+  </aside>
+
+  <!-- ── MAIN ── -->
+  <main class="main-content">
+    <header class="topbar">
+      <button class="sidebar-toggle" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="notif-bell" title="New jobs" onclick="showSection('jobs', document.querySelector('[data-section=jobs]'))">
+          <i class="bi bi-bell-fill"></i>
+          <span class="notif-dot" id="notif-dot" style="display:none"></span>
+        </div>
+        <div class="topbar-user" id="topbar-user">Welcome!</div>
+      </div>
+    </header>
+
+    <div class="notif-banner" id="notif-banner" style="display:none">
+      <i class="bi bi-stars"></i>
+      <span id="notif-text">New job openings available!</span>
+      <button onclick="document.getElementById('notif-banner').style.display='none'"><i class="bi bi-x"></i></button>
+    </div>
+
+    <!-- ── HOME ── -->
+    <section class="section active" id="section-home">
+      <div class="section-header">
+        <h1 id="home-greeting">Welcome back 👋</h1>
+        <p id="home-subtext">Loading your placement summary…</p>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon" style="background:linear-gradient(135deg,#7c3aed,#a855f7)"><i class="bi bi-briefcase-fill"></i></div>
+          <div class="stat-value" id="stat-jobs">—</div>
+          <div class="stat-label">Open Positions</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:linear-gradient(135deg,#0ea5e9,#38bdf8)"><i class="bi bi-file-earmark-check-fill"></i></div>
+          <div class="stat-value" id="stat-applied">—</div>
+          <div class="stat-label">Applied</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:linear-gradient(135deg,#10b981,#34d399)"><i class="bi bi-trophy-fill"></i></div>
+          <div class="stat-value" id="stat-placed">—</div>
+          <div class="stat-label">Placed</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon" style="background:linear-gradient(135deg,#f59e0b,#fbbf24)"><i class="bi bi-bell-fill"></i></div>
+          <div class="stat-value" id="stat-new">—</div>
+          <div class="stat-label">New This Week</div>
+        </div>
+      </div>
+      <div class="section-subtitle">Recent Job Openings</div>
+      <div class="job-cards-grid" id="home-recent-jobs">
+        <div class="loading-state"><i class="bi bi-arrow-clockwise spin"></i> Loading…</div>
+      </div>
+    </section>
+
+    <!-- ── JOB OPENINGS ── -->
+    <section class="section" id="section-jobs">
+      <div class="section-header">
+        <h1>Job Openings</h1>
+        <p>Browse and apply for available positions</p>
+      </div>
+      <div class="search-bar">
+        <i class="bi bi-search"></i>
+        <input type="text" id="job-search" placeholder="Search by company or description…" oninput="filterJobs()" />
+      </div>
+      <div class="job-cards-grid" id="all-jobs-container">
+        <div class="loading-state"><i class="bi bi-arrow-clockwise spin"></i> Loading…</div>
+      </div>
+    </section>
+
+    <!-- ── MY APPLICATIONS ── -->
+    <section class="section" id="section-applications">
+      <div class="section-header">
+        <h1>My Applications</h1>
+        <p>Track all your job applications</p>
+      </div>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Company</th>
+              <th>Description</th>
+              <th>Applied On</th>
+              <th>Deadline</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="applications-tbody">
+            <tr><td colspan="5" class="empty-state"><i class="bi bi-inbox"></i><br>No applications yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ── PROFILE ── -->
+    <section class="section" id="section-profile">
+      <div class="section-header">
+        <h1>My Profile</h1>
+        <p>View your details and update your password</p>
+      </div>
+      <div class="profile-grid">
+        <div class="profile-card">
+          <div class="profile-avatar" id="profile-avatar">S</div>
+          <div class="profile-info">
+            <div class="profile-field">
+              <span class="field-label">Email</span>
+              <span id="p-email">—</span>
+            </div>
+            <div class="profile-field">
+              <span class="field-label">Department</span>
+              <span id="p-dept">—</span>
+            </div>
+            <div class="profile-field">
+              <span class="field-label">CGPA</span>
+              <span id="p-cgpa">—</span>
+            </div>
+            <div class="profile-field">
+              <span class="field-label">Academic Backlogs</span>
+              <span id="p-backlogs">—</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="password-card">
+          <div class="password-card-header">
+            <i class="bi bi-shield-lock-fill"></i>
+            <h2>Change Password</h2>
+          </div>
+          <div id="pwd-alert" class="pwd-alert" style="display:none"></div>
+          <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" id="current-pwd" placeholder="Your current password" />
+          </div>
+          <div class="form-group">
+            <label>New Password</label>
+            <input type="password" id="new-pwd" placeholder="At least 6 characters" />
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" id="confirm-pwd" placeholder="Repeat new password" />
+          </div>
+          <button class="btn-change-pwd" id="change-pwd-btn" onclick="changePassword()">
+            <i class="bi bi-check-circle-fill"></i> Update Password
+          </button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/api.js"></script>
+  <script>
+    // ── AUTH GUARD ──
+    const student = JSON.parse(localStorage.getItem("tnp_student") || "null");
+    if (!student) window.location.href = "student-login.html";
+
+    let allJobs = [], myApplications = [];
+
+    // ── INIT UI ──
+    function initUI() {
+      const initials = (student.email || "S").charAt(0).toUpperCase();
+      const username = (student.email || "").split("@")[0];
+      document.getElementById("sidebar-avatar").textContent = initials;
+      document.getElementById("profile-avatar").textContent = initials;
+      document.getElementById("sidebar-name").textContent = username;
+      document.getElementById("sidebar-dept").textContent = student.dept || "—";
+      document.getElementById("topbar-user").textContent = `Hi, ${username} 👋`;
+      document.getElementById("home-greeting").textContent = `Welcome back, ${username} 👋`;
+      document.getElementById("home-subtext").textContent =
+        `${student.dept || "—"} · CGPA: ${student.cgpa || "—"} · Backlogs: ${student.academic_backlog ?? 0}`;
+      document.getElementById("p-email").textContent    = student.email || "—";
+      document.getElementById("p-dept").textContent     = student.dept  || "—";
+      document.getElementById("p-cgpa").textContent     = student.cgpa  || "—";
+      document.getElementById("p-backlogs").textContent = student.academic_backlog ?? 0;
+    }
+
+    // ── NAVIGATION ──
+    const sectionTitles = { home: "Dashboard", jobs: "Job Openings", applications: "My Applications", profile: "My Profile" };
+    function showSection(id, el) {
+      document.querySelectorAll(".section").forEach(s  => s.classList.remove("active"));
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+      document.getElementById("section-" + id).classList.add("active");
+      if (el) el.classList.add("active");
+      document.getElementById("topbar-title").textContent = sectionTitles[id] || "";
+      if (window.innerWidth < 768) document.getElementById("sidebar").classList.remove("open");
+    }
+    function toggleSidebar() { document.getElementById("sidebar").classList.toggle("open"); }
+
+    // ── LOAD DATA ──
+    async function loadAll() {
+      try {
+        const [jobs, apps] = await Promise.all([
+          api.get("/jobs"),
+          api.get("/students/" + student.student_id + "/applications")
+        ]);
+        allJobs = jobs;
+        myApplications = apps;
+
+        const appliedIds  = new Set(apps.map(a => a.job_id));
+        const sevenAgo    = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+        const newJobs     = jobs.filter(j => new Date(j.created_at) > sevenAgo);
+        const placedCount = apps.filter(a => a.ctc).length;
+
+        // Stats
+        document.getElementById("stat-jobs").textContent    = jobs.length;
+        document.getElementById("stat-applied").textContent = apps.length;
+        document.getElementById("stat-placed").textContent  = placedCount;
+        document.getElementById("stat-new").textContent     = newJobs.length;
+
+        // Notifications
+        if (newJobs.length > 0) {
+          document.getElementById("new-jobs-badge").textContent    = newJobs.length;
+          document.getElementById("new-jobs-badge").style.display  = "flex";
+          document.getElementById("notif-dot").style.display       = "block";
+          document.getElementById("notif-banner").style.display    = "flex";
+          document.getElementById("notif-text").textContent =
+            `🎉 ${newJobs.length} new job opening${newJobs.length > 1 ? "s" : ""} posted this week — check them out!`;
+        }
+
+        renderCards("home-recent-jobs",  jobs.slice(0, 4), appliedIds, true);
+        renderCards("all-jobs-container", jobs,            appliedIds, false);
+        renderApplications(apps);
+      } catch (e) {
+        console.error("Dashboard load error", e);
+      }
+    }
+
+    // ── RENDER JOB CARDS ──
+    function renderCards(containerId, jobs, appliedIds, compact) {
+      const el = document.getElementById(containerId);
+      if (!jobs.length) {
+        el.innerHTML = `<div class="empty-state"><i class="bi bi-inbox"></i><br>No job openings currently</div>`;
+        return;
+      }
+      const sevenAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      el.innerHTML = jobs.map(job => {
+        const isNew     = new Date(job.created_at) > sevenAgo;
+        const isApplied = appliedIds.has(job.job_id);
+        const isExpired = job.appl_deadline && new Date(job.appl_deadline) < new Date();
+        const desc = compact
+          ? (job.job_description || "").slice(0, 100) + ((job.job_description || "").length > 100 ? "…" : "")
+          : (job.job_description || "—");
+        const deadlineHtml = isExpired
+          ? `<div class="deadline expired"><i class="bi bi-clock"></i> Deadline passed</div>`
+          : job.appl_deadline
+            ? `<div class="deadline"><i class="bi bi-calendar3"></i> ${formatDate(job.appl_deadline)}</div>`
+            : `<div class="deadline">No deadline set</div>`;
+        const btnHtml = isApplied
+          ? `<button class="apply-btn applied" disabled><i class="bi bi-check-circle-fill"></i> Applied</button>`
+          : isExpired
+            ? `<button class="apply-btn expired" disabled>Deadline Passed</button>`
+            : `<button class="apply-btn" onclick="applyToJob(${job.job_id}, this)"><i class="bi bi-send-fill"></i> Apply Now</button>`;
+        return `
+        <div class="job-card ${isNew ? "is-new" : ""}">
+          ${isNew ? `<div class="new-badge">🔔 NEW</div>` : ""}
+          <div class="job-card-header">
+            <div class="company-icon">${(job.company_name || "C").charAt(0)}</div>
+            <div><div class="company-name">${job.company_name || "—"}</div>${deadlineHtml}</div>
+          </div>
+          <p class="job-desc">${desc}</p>
+          ${btnHtml}
+        </div>`;
+      }).join("");
+    }
+
+    // ── RENDER APPLICATIONS TABLE ──
+    function renderApplications(apps) {
+      const tbody = document.getElementById("applications-tbody");
+      if (!apps.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="empty-state"><i class="bi bi-inbox"></i><br>No applications yet</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = apps.map(a => `
+        <tr>
+          <td><strong>${a.company_name || "—"}</strong></td>
+          <td class="desc-cell">${(a.job_description || "").slice(0, 80)}${(a.job_description || "").length > 80 ? "…" : ""}</td>
+          <td>${formatDate(a.date_of_application)}</td>
+          <td>${a.appl_deadline ? formatDate(a.appl_deadline) : "—"}</td>
+          <td>${a.ctc
+            ? `<span class="badge-placed">✅ Placed · ₹${Number(a.ctc).toLocaleString("en-IN")}</span>`
+            : `<span class="badge-pending">⏳ Under Review</span>`}</td>
+        </tr>`).join("");
+    }
+
+    // ── APPLY TO JOB ──
+    async function applyToJob(jobId, btn) {
+      btn.disabled = true;
+      btn.innerHTML = `<i class="bi bi-arrow-clockwise spin"></i> Applying…`;
+      try {
+        await api.post("/applications", {
+          student_id: student.student_id,
+          job_id: jobId,
+          academic_backlog: student.academic_backlog || 0,
+          date_of_application: new Date().toISOString().split("T")[0]
+        });
+        btn.innerHTML = `<i class="bi bi-check-circle-fill"></i> Applied`;
+        btn.classList.add("applied");
+        // Update all instances of this button on the page
+        document.querySelectorAll(`.apply-btn`).forEach(b => {
+          if (b.onclick && b.onclick.toString().includes(`applyToJob(${jobId}`)) {
+            b.innerHTML = `<i class="bi bi-check-circle-fill"></i> Applied`;
+            b.classList.add("applied"); b.disabled = true;
+          }
+        });
+        myApplications.push({ job_id: jobId });
+        document.getElementById("stat-applied").textContent = myApplications.length;
+        showToast("Application submitted! 🎉", "success");
+        // Refresh applications tab
+        const apps = await api.get("/students/" + student.student_id + "/applications");
+        myApplications = apps;
+        renderApplications(apps);
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-send-fill"></i> Apply Now`;
+        showToast(err.error || "Failed to apply. Please try again.", "error");
+      }
+    }
+
+    // ── FILTER JOBS ──
+    function filterJobs() {
+      const q = document.getElementById("job-search").value.toLowerCase();
+      const appliedIds = new Set(myApplications.map(a => a.job_id));
+      const filtered = allJobs.filter(j =>
+        (j.company_name || "").toLowerCase().includes(q) ||
+        (j.job_description || "").toLowerCase().includes(q)
+      );
+      renderCards("all-jobs-container", filtered, appliedIds, false);
+    }
+
+    // ── CHANGE PASSWORD ──
+    async function changePassword() {
+      const current = document.getElementById("current-pwd").value;
+      const nw      = document.getElementById("new-pwd").value;
+      const confirm = document.getElementById("confirm-pwd").value;
+      const btn     = document.getElementById("change-pwd-btn");
+      showPwdMsg("", "");
+      if (!current || !nw || !confirm) { showPwdMsg("All fields are required.", "error"); return; }
+      if (nw.length < 6)               { showPwdMsg("New password must be at least 6 characters.", "error"); return; }
+      if (nw !== confirm)              { showPwdMsg("Passwords do not match.", "error"); return; }
+      btn.disabled = true;
+      btn.innerHTML = `<i class="bi bi-arrow-clockwise spin"></i> Updating…`;
+      try {
+        await api.put("/students/" + student.student_id + "/password", {
+          current_password: current, new_password: nw
+        });
+        showPwdMsg("Password updated successfully! ✅", "success");
+        document.getElementById("current-pwd").value = "";
+        document.getElementById("new-pwd").value     = "";
+        document.getElementById("confirm-pwd").value = "";
+      } catch (err) {
+        showPwdMsg(err.error || "Failed to update password.", "error");
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="bi bi-check-circle-fill"></i> Update Password`;
+      }
+    }
+
+    function showPwdMsg(msg, type) {
+      const el = document.getElementById("pwd-alert");
+      if (!msg) { el.style.display = "none"; return; }
+      el.textContent = msg;
+      el.className   = "pwd-alert " + type;
+      el.style.display = "block";
+    }
+
+    // ── LOGOUT ──
+    function doStudentLogout() {
+      localStorage.removeItem("tnp_student");
+      window.location.href = "index.html";
+    }
+
+    // ── BOOT ──
+    initUI();
+    loadAll();
+  </script>
+</body>
+</html>

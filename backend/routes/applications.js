@@ -41,6 +41,12 @@ router.post("/", async (req, res) => {
   const { student_id, job_id, academic_backlog, date_of_application } = req.body;
   if (!student_id || !job_id) return res.status(400).json({ error: "student_id and job_id required" });
   try {
+    // Prevent duplicate applications
+    const [existing] = await db.query(
+      "SELECT application_id FROM StudentApplication WHERE student_id = ? AND job_id = ?",
+      [student_id, job_id]
+    );
+    if (existing.length) return res.status(409).json({ error: "You have already applied for this job." });
     const [result] = await db.query(
       "INSERT INTO StudentApplication (student_id, job_id, academic_backlog, date_of_application) VALUES (?, ?, ?, ?)",
       [student_id, job_id, academic_backlog || 0, date_of_application || new Date()]

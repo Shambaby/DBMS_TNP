@@ -3,78 +3,123 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TNP Portal — Login</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <title>TNP Portal — Welcome</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
   <style>
-    body { background: #f0f4f8; min-height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; }
-    .login-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; padding: 2.5rem 2rem; width: 100%; max-width: 400px; box-shadow: 0 4px 24px rgba(0,0,0,0.06); }
-    .brand-icon { width: 52px; height: 52px; background: #1a56db; border-radius: 12px; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; }
-    .brand-icon i { color: #fff; font-size: 26px; }
-    .btn-primary { background: #1a56db; border-color: #1a56db; }
-    .btn-primary:hover { background: #1e40af; border-color: #1e40af; }
-    .form-control:focus { border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.12); }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+    /* Animated blobs */
+    body::before, body::after {
+      content: ''; position: fixed; border-radius: 50%;
+      filter: blur(80px); opacity: 0.15; animation: float 8s ease-in-out infinite;
+    }
+    body::before { width: 500px; height: 500px; background: #7c3aed; top: -100px; left: -100px; }
+    body::after  { width: 400px; height: 400px; background: #1a56db; bottom: -80px; right: -80px; animation-delay: -4s; }
+    @keyframes float { 0%,100% { transform: translate(0,0); } 50% { transform: translate(30px, -30px); } }
+
+    .wrapper { text-align: center; z-index: 1; padding: 2rem; }
+    .brand { margin-bottom: 2.5rem; }
+    .brand-logo {
+      width: 72px; height: 72px;
+      background: linear-gradient(135deg, #7c3aed, #1a56db);
+      border-radius: 20px; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1.25rem; font-size: 36px; color: #fff;
+      box-shadow: 0 8px 32px rgba(124,58,237,0.4);
+      animation: pulse 3s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100% { box-shadow: 0 8px 32px rgba(124,58,237,0.4); } 50% { box-shadow: 0 8px 48px rgba(124,58,237,0.7); } }
+    .brand h1 { font-size: 2rem; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+    .brand p  { color: rgba(255,255,255,0.5); font-size: 0.95rem; margin-top: 0.4rem; }
+
+    .role-label { color: rgba(255,255,255,0.4); font-size: 0.78rem; font-weight: 600; letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 1.25rem; }
+
+    .cards { display: flex; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
+
+    .role-card {
+      width: 220px; padding: 2rem 1.5rem;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+      cursor: pointer; text-decoration: none;
+      transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+      display: flex; flex-direction: column; align-items: center; gap: 1rem;
+      animation: fadeUp 0.6s ease both;
+    }
+    .role-card:nth-child(2) { animation-delay: 0.1s; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+
+    .role-card:hover { transform: translateY(-6px); border-color: rgba(255,255,255,0.25); }
+    .role-card.student:hover { box-shadow: 0 16px 40px rgba(124,58,237,0.35); }
+    .role-card.admin:hover   { box-shadow: 0 16px 40px rgba(26,86,219,0.35); }
+
+    .card-icon {
+      width: 64px; height: 64px; border-radius: 16px;
+      display: flex; align-items: center; justify-content: center; font-size: 30px; color: #fff;
+    }
+    .student .card-icon { background: linear-gradient(135deg, #7c3aed, #a855f7); box-shadow: 0 4px 16px rgba(124,58,237,0.4); }
+    .admin   .card-icon { background: linear-gradient(135deg, #1a56db, #3b82f6); box-shadow: 0 4px 16px rgba(26,86,219,0.4); }
+
+    .card-title { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .card-sub   { font-size: 0.78rem; color: rgba(255,255,255,0.45); }
+
+    .card-arrow {
+      width: 36px; height: 36px; border-radius: 50%;
+      background: rgba(255,255,255,0.1);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.6); font-size: 1rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    .role-card:hover .card-arrow { background: rgba(255,255,255,0.2); color: #fff; }
+
+    .footer { margin-top: 2.5rem; color: rgba(255,255,255,0.25); font-size: 0.78rem; }
   </style>
 </head>
 <body>
-  <div class="login-card">
-    <div class="brand-icon"><i class="bi bi-mortarboard-fill"></i></div>
-    <h4 class="text-center fw-semibold mb-1">TNP Portal</h4>
-    <p class="text-center text-muted small mb-4">Training & Placement Management System</p>
-
-    <div id="alert-box" class="alert alert-danger d-none small py-2"></div>
-
-    <div class="mb-3">
-      <label class="form-label small fw-medium">Email address</label>
-      <input type="email" id="email" class="form-control" placeholder="admin@tnp.edu" />
+  <div class="wrapper">
+    <div class="brand">
+      <div class="brand-logo"><i class="bi bi-mortarboard-fill"></i></div>
+      <h1>TNP Portal</h1>
+      <p>Training &amp; Placement Management System</p>
     </div>
-    <div class="mb-4">
-      <label class="form-label small fw-medium">Password</label>
-      <input type="password" id="password" class="form-control" placeholder="••••••••" />
-    </div>
-    <button class="btn btn-primary w-100 fw-medium" onclick="doLogin()">
-      <span id="btn-text">Sign in</span>
-    </button>
 
-    <p class="text-center text-muted small mt-4 mb-0">
-      TNP Cell &mdash; Admin Access Only
-    </p>
+    <div class="role-label">Select your role to continue</div>
+
+    <div class="cards">
+      <a href="student-login.html" class="role-card student" id="student-card">
+        <div class="card-icon"><i class="bi bi-person-badge-fill"></i></div>
+        <div>
+          <div class="card-title">Student</div>
+          <div class="card-sub">Browse &amp; apply for jobs</div>
+        </div>
+        <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+      </a>
+
+      <a href="admin-login.html" class="role-card admin" id="admin-card">
+        <div class="card-icon"><i class="bi bi-shield-lock-fill"></i></div>
+        <div>
+          <div class="card-title">Admin</div>
+          <div class="card-sub">Manage placements</div>
+        </div>
+        <div class="card-arrow"><i class="bi bi-arrow-right"></i></div>
+      </a>
+    </div>
+
+    <div class="footer">TNP Cell &mdash; &copy; 2025</div>
   </div>
 
-  <script src="js/api.js"></script>
   <script>
-    // Redirect if already logged in
-    if (localStorage.getItem("tnp_admin")) window.location.href = "dashboard.html";
-
-    async function doLogin() {
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const btn = document.querySelector("button");
-      const alert = document.getElementById("alert-box");
-      alert.classList.add("d-none");
-
-      if (!email || !password) {
-        alert.textContent = "Please enter email and password.";
-        alert.classList.remove("d-none");
-        return;
-      }
-
-      btn.disabled = true;
-      document.getElementById("btn-text").textContent = "Signing in...";
-
-      try {
-        const data = await api.post("/admin/login", { email, password });
-        localStorage.setItem("tnp_admin", JSON.stringify(data.admin));
-        window.location.href = "dashboard.html";
-      } catch (err) {
-        alert.textContent = err.error || "Login failed. Check your credentials.";
-        alert.classList.remove("d-none");
-        btn.disabled = false;
-        document.getElementById("btn-text").textContent = "Sign in";
-      }
-    }
-
-    document.addEventListener("keydown", (e) => { if (e.key === "Enter") doLogin(); });
+    // If already logged in as admin, go straight to dashboard
+    if (localStorage.getItem("tnp_admin"))   window.location.href = "dashboard.html";
+    if (localStorage.getItem("tnp_student")) window.location.href = "student-dashboard.html";
   </script>
 </body>
 </html>
