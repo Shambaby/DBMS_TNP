@@ -148,7 +148,7 @@ http://localhost:5003
 
 ## Deploy On Vercel
 
-This project is ready for Vercel deployment. The root files `index.js`, `package.json`, and `vercel.json` are included so Vercel can run the Express backend and serve the frontend.
+This project is ready for Vercel deployment. The files `api/index.js`, `package.json`, and `vercel.json` are included so Vercel can run the Express backend as a serverless function and serve the frontend.
 
 ### Option 1: Deploy From GitHub
 
@@ -162,7 +162,8 @@ https://github.com/Shambaby/DBMS_TNP.git
 ```
 
 5. Keep the project root as the repository root.
-6. Add these Environment Variables in Vercel:
+6. In project settings, keep the Framework Preset as `Other` if Vercel asks.
+7. Add these Environment Variables in Vercel:
 
 ```env
 DB_HOST=your_mysql_host
@@ -173,7 +174,7 @@ DB_NAME=railway
 DB_SSL=true
 ```
 
-7. Click `Deploy`.
+8. Click `Deploy`.
 
 After deployment, Vercel will give a public URL like:
 
