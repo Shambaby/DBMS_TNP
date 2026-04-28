@@ -2,12 +2,31 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const bcrypt = require("bcryptjs");
+const { isValidPassword } = require("./users");
 
 // GET all students
 router.get("/", async (req, res) => {
   try {
     const [rows] = await db.query("SELECT enrollment_no, student_name, branch, year_of_graduation, official_email, personal_email, cgpa, active_backlog, dead_backlog, resume_url, created_at FROM Student ORDER BY created_at DESC");
     res.json(rows);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// POST student login using User supertype credentials
+router.post("/login", async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    const [userRows] = await db.query("SELECT * FROM `User` WHERE email = ? AND user_type = 'student'", [email]);
+    if (!userRows.length) return res.status(401).json({ error: "Invalid credentials" });
+
+    const valid = await isValidPassword(password, userRows[0].password);
+    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
+
+    const [rows] = await db.query("SELECT * FROM Student WHERE official_email = ?", [email]);
+    if (!rows.length) return res.status(404).json({ error: "Student not found" });
+    res.json({ success: true, student: rows[0] });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

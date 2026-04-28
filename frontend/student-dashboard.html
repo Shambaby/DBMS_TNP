@@ -274,6 +274,14 @@
         renderApplications(apps);
       } catch (e) {
         console.error("Dashboard load error", e);
+        document.getElementById("stat-jobs").textContent = "0";
+        document.getElementById("stat-applied").textContent = "0";
+        document.getElementById("stat-placed").textContent = "0";
+        document.getElementById("stat-new").textContent = "0";
+        document.getElementById("home-recent-jobs").innerHTML =
+          `<div class="empty-state"><i class="bi bi-exclamation-circle"></i><br>Unable to load job data. Restart the server and refresh this page.</div>`;
+        document.getElementById("all-jobs-container").innerHTML =
+          `<div class="empty-state"><i class="bi bi-exclamation-circle"></i><br>Unable to load job openings.</div>`;
       }
     }
 

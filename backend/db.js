@@ -10,8 +10,22 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
   ssl: process.env.DB_SSL === "true" ? { rejectUnauthorized: false } : false,
 });
+
+const rawQuery = pool.query.bind(pool);
+pool.query = async (...args) => {
+  try {
+    return await rawQuery(...args);
+  } catch (err) {
+    if (["ECONNRESET", "PROTOCOL_CONNECTION_LOST"].includes(err.code)) {
+      return rawQuery(...args);
+    }
+    throw err;
+  }
+};
 
 pool.getConnection()
   .then((conn) => {

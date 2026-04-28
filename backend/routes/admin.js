@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const db = require("../db");
 const bcrypt = require("bcryptjs");
+const { isValidPassword } = require("./users");
 
 // GET all admins
 router.get("/", async (req, res) => {
@@ -44,10 +45,15 @@ router.post("/", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { email, password } = req.body;
   try {
+    const [userRows] = await db.query("SELECT * FROM `User` WHERE email = ? AND user_type = 'admin'", [email]);
+    if (!userRows.length) return res.status(401).json({ error: "Invalid credentials" });
+
+    const valid = await isValidPassword(password, userRows[0].password);
+    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
+
     const [rows] = await db.query("SELECT * FROM Admin WHERE email = ?", [email]);
     if (!rows.length) return res.status(401).json({ error: "Invalid credentials" });
-    const valid = await bcrypt.compare(password, rows[0].password);
-    if (!valid) return res.status(401).json({ error: "Invalid credentials" });
+
     const { password: _, ...admin } = rows[0];
     res.json({ success: true, admin });
   } catch (err) {

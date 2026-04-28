@@ -13,6 +13,7 @@ app.use(express.static(path.join(__dirname, "../frontend")));
 
 // API Routes
 app.use("/api/admin", require("./routes/admin"));
+app.use("/api/users", require("./routes/users").router);
 app.use("/api/companies", require("./routes/companies"));
 app.use("/api/jobs", require("./routes/jobs"));
 app.use("/api/students", require("./routes/students"));
