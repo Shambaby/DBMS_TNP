@@ -146,6 +146,72 @@ Then open:
 http://localhost:5003
 ```
 
+## Deploy On Vercel
+
+This project is ready for Vercel deployment. The root files `index.js`, `package.json`, and `vercel.json` are included so Vercel can run the Express backend and serve the frontend.
+
+### Option 1: Deploy From GitHub
+
+1. Push the latest code to GitHub.
+2. Open Vercel.
+3. Click `Add New Project`.
+4. Import this GitHub repo:
+
+```text
+https://github.com/Shambaby/DBMS_TNP.git
+```
+
+5. Keep the project root as the repository root.
+6. Add these Environment Variables in Vercel:
+
+```env
+DB_HOST=your_mysql_host
+DB_PORT=your_mysql_port
+DB_USER=your_mysql_user
+DB_PASSWORD=your_mysql_password
+DB_NAME=railway
+DB_SSL=true
+```
+
+7. Click `Deploy`.
+
+After deployment, Vercel will give a public URL like:
+
+```text
+https://your-project-name.vercel.app
+```
+
+Use these pages:
+
+```text
+https://your-project-name.vercel.app/admin-login.html
+https://your-project-name.vercel.app/student-login.html
+```
+
+### Option 2: Deploy Using Vercel CLI
+
+Install and login:
+
+```powershell
+npm install -g vercel
+vercel login
+```
+
+Deploy:
+
+```powershell
+cd F:\DBMS_Project_Final\DBMS_TNP
+vercel
+```
+
+For production deployment:
+
+```powershell
+vercel --prod
+```
+
+Make sure the same database environment variables are added in the Vercel dashboard.
+
 ## Admin Login
 
 Admin login page:
