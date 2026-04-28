@@ -157,7 +157,7 @@
               <span id="p-email">—</span>
             </div>
             <div class="profile-field">
-              <span class="field-label">Department</span>
+              <span class="field-label">Branch</span>
               <span id="p-dept">—</span>
             </div>
             <div class="profile-field">
@@ -207,20 +207,23 @@
 
     // ── INIT UI ──
     function initUI() {
-      const initials = (student.email || "S").charAt(0).toUpperCase();
-      const username = (student.email || "").split("@")[0];
+      const email = student.official_email || student.email || "";
+      const branch = student.branch || student.dept || "—";
+      const activeBacklog = student.active_backlog ?? student.academic_backlog ?? 0;
+      const initials = (email || student.enrollment_no || "S").charAt(0).toUpperCase();
+      const username = email ? email.split("@")[0] : (student.student_name || student.enrollment_no || "Student");
       document.getElementById("sidebar-avatar").textContent = initials;
       document.getElementById("profile-avatar").textContent = initials;
       document.getElementById("sidebar-name").textContent = username;
-      document.getElementById("sidebar-dept").textContent = student.dept || "—";
+      document.getElementById("sidebar-dept").textContent = branch;
       document.getElementById("topbar-user").textContent = `Hi, ${username} 👋`;
       document.getElementById("home-greeting").textContent = `Welcome back, ${username} 👋`;
       document.getElementById("home-subtext").textContent =
-        `${student.dept || "—"} · CGPA: ${student.cgpa || "—"} · Backlogs: ${student.academic_backlog ?? 0}`;
-      document.getElementById("p-email").textContent    = student.email || "—";
-      document.getElementById("p-dept").textContent     = student.dept  || "—";
+        `${branch} · CGPA: ${student.cgpa || "—"} · Backlogs: ${activeBacklog}`;
+      document.getElementById("p-email").textContent    = email || "—";
+      document.getElementById("p-dept").textContent     = branch;
       document.getElementById("p-cgpa").textContent     = student.cgpa  || "—";
-      document.getElementById("p-backlogs").textContent = student.academic_backlog ?? 0;
+      document.getElementById("p-backlogs").textContent = activeBacklog;
     }
 
     // ── NAVIGATION ──
@@ -240,7 +243,7 @@
       try {
         const [jobs, apps] = await Promise.all([
           api.get("/jobs"),
-          api.get("/students/" + student.student_id + "/applications")
+          api.get("/students/" + (student.enrollment_no || student.student_id) + "/applications")
         ]);
         allJobs = jobs;
         myApplications = apps;
@@ -327,7 +330,7 @@
           <td>${a.appl_deadline ? formatDate(a.appl_deadline) : "—"}</td>
           <td>${a.ctc
             ? `<span class="badge-placed">✅ Placed · ₹${Number(a.ctc).toLocaleString("en-IN")}</span>`
-            : `<span class="badge-pending">⏳ Under Review</span>`}</td>
+            : `<span class="badge-pending">${a.status || "Applied"}</span>`}</td>
         </tr>`).join("");
     }
 
@@ -337,9 +340,10 @@
       btn.innerHTML = `<i class="bi bi-arrow-clockwise spin"></i> Applying…`;
       try {
         await api.post("/applications", {
-          student_id: student.student_id,
+          enrollment_no: student.enrollment_no || student.student_id,
           job_id: jobId,
-          academic_backlog: student.academic_backlog || 0,
+          active_backlog: student.active_backlog ?? student.academic_backlog ?? 0,
+          status: "Applied",
           date_of_application: new Date().toISOString().split("T")[0]
         });
         btn.innerHTML = `<i class="bi bi-check-circle-fill"></i> Applied`;
@@ -355,7 +359,7 @@
         document.getElementById("stat-applied").textContent = myApplications.length;
         showToast("Application submitted! 🎉", "success");
         // Refresh applications tab
-        const apps = await api.get("/students/" + student.student_id + "/applications");
+        const apps = await api.get("/students/" + (student.enrollment_no || student.student_id) + "/applications");
         myApplications = apps;
         renderApplications(apps);
       } catch (err) {
@@ -389,7 +393,7 @@
       btn.disabled = true;
       btn.innerHTML = `<i class="bi bi-arrow-clockwise spin"></i> Updating…`;
       try {
-        await api.put("/students/" + student.student_id + "/password", {
+        await api.put("/students/" + (student.enrollment_no || student.student_id) + "/password", {
           current_password: current, new_password: nw
         });
         showPwdMsg("Password updated successfully! ✅", "success");

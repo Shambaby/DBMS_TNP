@@ -22,12 +22,12 @@ router.get("/:id", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const { company_name, address, contact_no } = req.body;
+  const { company_name, industry_type, description, email, contact_no, address, website } = req.body;
   if (!company_name) return res.status(400).json({ error: "Company name required" });
   try {
     const [result] = await db.query(
-      "INSERT INTO Company (company_name, address, contact_no) VALUES (?, ?, ?)",
-      [company_name, address, contact_no]
+      "INSERT INTO Company (company_name, industry_type, description, email, contact_no, address, website) VALUES (?, ?, ?, ?, ?, ?, ?)",
+      [company_name, industry_type, description, email, contact_no, address, website]
     );
     res.status(201).json({ company_id: result.insertId, message: "Company created" });
   } catch (err) {
@@ -36,11 +36,11 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/:id", async (req, res) => {
-  const { company_name, address, contact_no } = req.body;
+  const { company_name, industry_type, description, email, contact_no, address, website } = req.body;
   try {
     await db.query(
-      "UPDATE Company SET company_name=?, address=?, contact_no=? WHERE company_id=?",
-      [company_name, address, contact_no, req.params.id]
+      "UPDATE Company SET company_name=?, industry_type=?, description=?, email=?, contact_no=?, address=?, website=? WHERE company_id=?",
+      [company_name, industry_type, description, email, contact_no, address, website, req.params.id]
     );
     res.json({ message: "Company updated" });
   } catch (err) {

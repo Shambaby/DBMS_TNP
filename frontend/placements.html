@@ -25,7 +25,7 @@
       </div>
       <div class="table-responsive">
         <table class="table table-hover">
-          <thead><tr><th>#</th><th>Student</th><th>Dept</th><th>Company</th><th>Job Role</th><th>CTC</th><th>Joining Date</th><th>Recorded On</th><th>Actions</th></tr></thead>
+          <thead><tr><th>#</th><th>Student</th><th>Branch</th><th>Company</th><th>Job Role</th><th>CTC</th><th>Joining Date</th><th>Recorded On</th><th>Actions</th></tr></thead>
           <tbody id="placements-body"><tr><td colspan="9" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td></tr></tbody>
         </table>
       </div>
@@ -85,8 +85,8 @@
       tbody.innerHTML = data.length ? data.map((p,i) => `
         <tr>
           <td>${i+1}</td>
-          <td>${p.student_email||"—"}</td>
-          <td><span class="badge-dept">${p.dept||"—"}</span></td>
+          <td>${p.student_email||p.enrollment_no||"—"}</td>
+          <td><span class="badge-dept">${p.branch||"—"}</span></td>
           <td><strong>${p.company_name||"—"}</strong></td>
           <td style="max-width:160px;"><span class="text-truncate d-block" style="max-width:140px;">${p.job_description||"—"}</span></td>
           <td><span class="badge-ctc">${formatCTC(p.ctc)}</span></td>
@@ -101,11 +101,12 @@
     function filterTable(q) {
       renderTable(allPlacements.filter(p =>
         (p.student_email||"").toLowerCase().includes(q.toLowerCase()) ||
+        (p.enrollment_no||"").toLowerCase().includes(q.toLowerCase()) ||
         (p.company_name||"").toLowerCase().includes(q.toLowerCase())
       ));
     }
     function populateSelects() {
-      document.getElementById("pl-application").innerHTML = `<option value="">Select application...</option>` + applications.map(a => `<option value="${a.application_id}">${a.student_email} → ${a.company_name}</option>`).join("");
+      document.getElementById("pl-application").innerHTML = `<option value="">Select application...</option>` + applications.map(a => `<option value="${a.application_id}">${a.student_email || a.enrollment_no} → ${a.company_name}</option>`).join("");
       document.getElementById("pl-job").innerHTML = `<option value="">Select job...</option>` + jobs.map(j => `<option value="${j.job_id}">${j.company_name} — ${j.job_description.substring(0,40)}</option>`).join("");
     }
     function openAddModal() {

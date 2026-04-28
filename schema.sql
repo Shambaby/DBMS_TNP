@@ -9,15 +9,21 @@ CREATE TABLE IF NOT EXISTS Admin (
   email VARCHAR(255) NOT NULL UNIQUE,
   password VARCHAR(255) NOT NULL,
   phone_no VARCHAR(20),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS Company (
   company_id INT AUTO_INCREMENT PRIMARY KEY,
   company_name VARCHAR(255) NOT NULL,
-  address TEXT,
+  industry_type VARCHAR(100),
+  description TEXT,
+  email VARCHAR(255),
   contact_no VARCHAR(20),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  address TEXT,
+  website VARCHAR(255),
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS JobOpening (
@@ -32,22 +38,29 @@ CREATE TABLE IF NOT EXISTS JobOpening (
 );
 
 CREATE TABLE IF NOT EXISTS Student (
-  student_id INT AUTO_INCREMENT PRIMARY KEY,
-  email VARCHAR(255) NOT NULL UNIQUE,
-  dept VARCHAR(100) NOT NULL,
+  enrollment_no VARCHAR(50) PRIMARY KEY,
+  student_name VARCHAR(255) NOT NULL,
+  branch VARCHAR(100) NOT NULL,
+  year_of_graduation INT,
+  official_email VARCHAR(255) NOT NULL UNIQUE,
+  personal_email VARCHAR(255),
   cgpa DECIMAL(4,2),
-  academic_backlog INT DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  active_backlog INT DEFAULT 0,
+  dead_backlog INT DEFAULT 0,
+  resume_url VARCHAR(500), -- stores Google Drive or other resume hyperlink
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS StudentApplication (
   application_id INT AUTO_INCREMENT PRIMARY KEY,
-  student_id INT NOT NULL,
+  enrollment_no VARCHAR(50) NOT NULL,
   job_id INT NOT NULL,
-  academic_backlog INT DEFAULT 0,
+  active_backlog INT DEFAULT 0,
+  status VARCHAR(50) DEFAULT 'Applied',
   date_of_application DATE DEFAULT (CURRENT_DATE),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (student_id) REFERENCES Student(student_id) ON DELETE CASCADE,
+  FOREIGN KEY (enrollment_no) REFERENCES Student(enrollment_no) ON DELETE CASCADE,
   FOREIGN KEY (job_id) REFERENCES JobOpening(job_id) ON DELETE CASCADE
 );
 
@@ -55,11 +68,13 @@ CREATE TABLE IF NOT EXISTS Placement (
   placement_id INT AUTO_INCREMENT PRIMARY KEY,
   application_id INT NOT NULL,
   job_id INT NOT NULL,
+  enrollment_no VARCHAR(50),
   ctc DECIMAL(12,2),
   join_date DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (application_id) REFERENCES StudentApplication(application_id) ON DELETE CASCADE,
-  FOREIGN KEY (job_id) REFERENCES JobOpening(job_id) ON DELETE CASCADE
+  FOREIGN KEY (job_id) REFERENCES JobOpening(job_id) ON DELETE CASCADE,
+  FOREIGN KEY (enrollment_no) REFERENCES Student(enrollment_no) ON DELETE SET NULL
 );
 
 -- Sample seed data

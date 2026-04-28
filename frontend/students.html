@@ -21,7 +21,7 @@
     <div class="row g-3 mb-3">
       <div class="col-md-4">
         <select class="form-select form-select-sm" id="dept-filter" onchange="applyFilters()">
-          <option value="">All Departments</option>
+          <option value="">All Branches</option>
         </select>
       </div>
       <div class="col-md-4">
@@ -34,8 +34,8 @@
       </div>
       <div class="table-responsive">
         <table class="table table-hover">
-          <thead><tr><th>#</th><th>Email</th><th>Department</th><th>CGPA</th><th>Backlogs</th><th>Added On</th><th>Actions</th></tr></thead>
-          <tbody id="students-body"><tr><td colspan="7" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td></tr></tbody>
+          <thead><tr><th>#</th><th>Enrollment No</th><th>Student Name</th><th>Branch</th><th>Official Email</th><th>CGPA</th><th>Active Backlog</th><th>Resume</th><th>Actions</th></tr></thead>
+          <tbody id="students-body"><tr><td colspan="9" class="empty-state"><i class="bi bi-hourglass-split"></i>Loading...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -51,24 +51,48 @@
           <input type="hidden" id="student-id" />
           <div class="row g-3">
             <div class="col-12">
-              <label class="form-label small fw-medium">Email <span class="text-danger">*</span></label>
-              <input type="email" class="form-control" id="student-email" />
+              <label class="form-label small fw-medium">Enrollment No. <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="student-enrollment" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-medium">Student Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="student-name" />
             </div>
             <div class="col-md-6">
-              <label class="form-label small fw-medium">Department <span class="text-danger">*</span></label>
-              <select class="form-select" id="student-dept">
+              <label class="form-label small fw-medium">Branch <span class="text-danger">*</span></label>
+              <select class="form-select" id="student-branch">
                 <option value="">Select...</option>
                 <option>CSE</option><option>IT</option><option>ECE</option><option>EEE</option>
                 <option>ME</option><option>CE</option><option>AIDS</option><option>AIML</option>
               </select>
             </div>
-            <div class="col-md-3">
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Year of Graduation</label>
+              <input type="number" class="form-control" id="student-year" min="2024" max="2030" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Official Email <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" id="student-official-email" />
+            </div>
+            <div class="col-md-6">
+              <label class="form-label small fw-medium">Personal Email</label>
+              <input type="email" class="form-control" id="student-personal-email" />
+            </div>
+            <div class="col-md-4">
               <label class="form-label small fw-medium">CGPA</label>
               <input type="number" class="form-control" id="student-cgpa" min="0" max="10" step="0.01" />
             </div>
-            <div class="col-md-3">
-              <label class="form-label small fw-medium">Backlogs</label>
-              <input type="number" class="form-control" id="student-backlog" min="0" value="0" />
+            <div class="col-md-4">
+              <label class="form-label small fw-medium">Active Backlog</label>
+              <input type="number" class="form-control" id="student-active-backlog" min="0" value="0" />
+            </div>
+            <div class="col-md-4">
+              <label class="form-label small fw-medium">Dead Backlog</label>
+              <input type="number" class="form-control" id="student-dead-backlog" min="0" value="0" />
+            </div>
+            <div class="col-12">
+              <label class="form-label small fw-medium">Resume Link</label>
+              <input type="url" class="form-control" id="student-resume-url" placeholder="https://drive.google.com/your-resume" />
             </div>
           </div>
         </div>
@@ -87,13 +111,14 @@
     async function loadStudents() {
       try {
         allStudents = await api.get("/students");
-        const depts = [...new Set(allStudents.map(s => s.dept).filter(Boolean))];
-        const df = document.getElementById("dept-filter");
-        depts.forEach(d => { const o = document.createElement("option"); o.value = d; o.textContent = d; df.appendChild(o); });
+        const branches = [...new Set(allStudents.map(s => s.branch).filter(Boolean))];
+        const bf = document.getElementById("dept-filter");
+        bf.innerHTML = '<option value="">All Branches</option>';
+        branches.forEach(b => { const o = document.createElement("option"); o.value = b; o.textContent = b; bf.appendChild(o); });
         renderTable(allStudents);
         document.getElementById("table-count").textContent = `All Students (${allStudents.length})`;
       } catch(err) {
-        document.getElementById("students-body").innerHTML = `<tr><td colspan="7" class="empty-state"><i class="bi bi-exclamation-circle"></i>Failed to load</td></tr>`;
+        document.getElementById("students-body").innerHTML = `<tr><td colspan="9" class="empty-state"><i class="bi bi-exclamation-circle"></i>Failed to load</td></tr>`;
       }
     }
     function renderTable(data) {
@@ -101,51 +126,72 @@
       tbody.innerHTML = data.length ? data.map((s,i) => `
         <tr>
           <td>${i+1}</td>
-          <td>${s.email}</td>
-          <td><span class="badge-dept">${s.dept}</span></td>
+          <td><strong>${s.enrollment_no}</strong></td>
+          <td>${s.student_name}</td>
+          <td><span class="badge-dept">${s.branch}</span></td>
+          <td>${s.official_email}</td>
           <td><span class="badge-cgpa">${s.cgpa || "—"}</span></td>
-          <td>${s.academic_backlog > 0 ? `<span class="badge bg-danger-subtle text-danger">${s.academic_backlog}</span>` : `<span class="badge bg-success-subtle text-success">0</span>`}</td>
-          <td>${formatDate(s.created_at)}</td>
+          <td>${s.active_backlog > 0 ? `<span class="badge bg-danger-subtle text-danger">${s.active_backlog}</span>` : `<span class="badge bg-success-subtle text-success">0</span>`}</td>
+          <td>${s.resume_url ? `<a href="${s.resume_url}" target="_blank" rel="noopener">Resume Link</a>` : "—"}</td>
           <td>
-            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal(${s.student_id})"><i class="bi bi-pencil"></i></button>
-            <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent(${s.student_id})"><i class="bi bi-trash"></i></button>
+            <button class="btn btn-sm btn-outline-primary me-1" onclick="openEditModal('${s.enrollment_no}')"><i class="bi bi-pencil"></i></button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteStudent('${s.enrollment_no}')"><i class="bi bi-trash"></i></button>
           </td>
-        </tr>`).join("") : `<tr><td colspan="7" class="empty-state"><i class="bi bi-people"></i>No students found</td></tr>`;
+        </tr>`).join("") : `<tr><td colspan="9" class="empty-state"><i class="bi bi-people"></i>No students found</td></tr>`;
     }
     function applyFilters() {
-      const dept = document.getElementById("dept-filter").value;
+      const branch = document.getElementById("dept-filter").value;
       const q = document.getElementById("search-input").value.toLowerCase();
       renderTable(allStudents.filter(s =>
-        (!dept || s.dept === dept) && (!q || s.email.toLowerCase().includes(q))
+        (!branch || s.branch === branch) && (!q || s.official_email.toLowerCase().includes(q) || s.student_name.toLowerCase().includes(q))
       ));
     }
     function openAddModal() {
       document.getElementById("modal-title").textContent = "Add Student";
       document.getElementById("student-id").value = "";
-      document.getElementById("student-email").value = "";
-      document.getElementById("student-dept").value = "";
+      document.getElementById("student-enrollment").value = "";
+      document.getElementById("student-name").value = "";
+      document.getElementById("student-branch").value = "";
+      document.getElementById("student-year").value = "";
+      document.getElementById("student-official-email").value = "";
+      document.getElementById("student-personal-email").value = "";
       document.getElementById("student-cgpa").value = "";
-      document.getElementById("student-backlog").value = "0";
+      document.getElementById("student-active-backlog").value = "0";
+      document.getElementById("student-dead-backlog").value = "0";
+      document.getElementById("student-resume-url").value = "";
     }
-    function openEditModal(id) {
-      const s = allStudents.find(x => x.student_id === id);
+    function openEditModal(enrollment_no) {
+      const s = allStudents.find(x => x.enrollment_no === enrollment_no);
       document.getElementById("modal-title").textContent = "Edit Student";
-      document.getElementById("student-id").value = s.student_id;
-      document.getElementById("student-email").value = s.email;
-      document.getElementById("student-dept").value = s.dept;
+      document.getElementById("student-id").value = s.enrollment_no;
+      document.getElementById("student-enrollment").value = s.enrollment_no;
+      document.getElementById("student-name").value = s.student_name;
+      document.getElementById("student-branch").value = s.branch;
+      document.getElementById("student-year").value = s.year_of_graduation || "";
+      document.getElementById("student-official-email").value = s.official_email;
+      document.getElementById("student-personal-email").value = s.personal_email || "";
       document.getElementById("student-cgpa").value = s.cgpa || "";
-      document.getElementById("student-backlog").value = s.academic_backlog || 0;
+      document.getElementById("student-active-backlog").value = s.active_backlog || 0;
+      document.getElementById("student-dead-backlog").value = s.dead_backlog || 0;
+      document.getElementById("student-resume-url").value = s.resume_url || "";
       new bootstrap.Modal(document.getElementById("studentModal")).show();
     }
     async function saveStudent() {
       const id = document.getElementById("student-id").value;
+      const resumeUrl = document.getElementById("student-resume-url").value.trim();
       const payload = {
-        email: document.getElementById("student-email").value.trim(),
-        dept: document.getElementById("student-dept").value,
+        enrollment_no: document.getElementById("student-enrollment").value.trim(),
+        student_name: document.getElementById("student-name").value.trim(),
+        branch: document.getElementById("student-branch").value,
+        year_of_graduation: document.getElementById("student-year").value || null,
+        official_email: document.getElementById("student-official-email").value.trim(),
+        personal_email: document.getElementById("student-personal-email").value.trim(),
         cgpa: document.getElementById("student-cgpa").value || null,
-        academic_backlog: document.getElementById("student-backlog").value || 0,
+        active_backlog: document.getElementById("student-active-backlog").value || 0,
+        dead_backlog: document.getElementById("student-dead-backlog").value || 0,
+        resume_url: resumeUrl || null,
       };
-      if (!payload.email || !payload.dept) { showToast("Email and department required","error"); return; }
+      if (!payload.enrollment_no || !payload.student_name || !payload.branch || !payload.official_email) { showToast("Enrollment No, Student Name, Branch, and Official Email required","error"); return; }
       try {
         id ? await api.put(`/students/${id}`, payload) : await api.post("/students", payload);
         showToast(id ? "Student updated" : "Student added");
@@ -153,9 +199,9 @@
         loadStudents();
       } catch(err) { showToast(err.error||"Failed to save","error"); }
     }
-    async function deleteStudent(id) {
+    async function deleteStudent(enrollment_no) {
       if (!confirm("Delete this student?")) return;
-      try { await api.delete(`/students/${id}`); showToast("Student deleted"); loadStudents(); }
+      try { await api.delete(`/students/${enrollment_no}`); showToast("Student deleted"); loadStudents(); }
       catch(err) { showToast(err.error||"Failed to delete","error"); }
     }
     loadStudents();

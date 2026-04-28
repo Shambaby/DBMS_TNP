@@ -88,7 +88,7 @@
               <thead>
                 <tr>
                   <th>Student</th>
-                  <th>Department</th>
+                  <th>Branch</th>
                   <th>Company</th>
                   <th>CTC</th>
                   <th>Joining</th>
@@ -104,17 +104,17 @@
         </div>
       </div>
 
-      <!-- Dept Stats -->
+      <!-- Branch Stats -->
       <div class="col-lg-5">
         <div class="data-table-card">
           <div class="table-header">
-            <h6 class="mb-0 fw-semibold">Placement by Department</h6>
+            <h6 class="mb-0 fw-semibold">Placement by Branch</h6>
           </div>
           <div class="table-responsive">
             <table class="table">
               <thead>
                 <tr>
-                  <th>Department</th>
+                  <th>Branch</th>
                   <th>Placed</th>
                   <th>% Share</th>
                 </tr>
@@ -150,8 +150,8 @@
         const rp = document.getElementById("recent-placements");
         rp.innerHTML = d.recent_placements.length ? d.recent_placements.map(p => `
           <tr>
-            <td>${p.email || "—"}</td>
-            <td><span class="badge-dept">${p.dept || "—"}</span></td>
+            <td>${p.official_email || "—"}</td>
+            <td><span class="badge-dept">${p.branch || "—"}</span></td>
             <td>${p.company_name || "—"}</td>
             <td><span class="badge-ctc">${formatCTC(p.ctc)}</span></td>
             <td>${formatDate(p.join_date)}</td>
@@ -161,7 +161,7 @@
         const ds = document.getElementById("dept-stats");
         ds.innerHTML = d.dept_stats.length ? d.dept_stats.map(r => `
           <tr>
-            <td>${r.dept}</td>
+            <td>${r.branch}</td>
             <td>${r.placed}</td>
             <td>
               <div class="d-flex align-items-center gap-2">
